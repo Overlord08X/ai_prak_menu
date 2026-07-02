@@ -1,7 +1,7 @@
 # ================================================
 # Craft Food Finder - Production Dockerfile
 # PHP 8.3-FPM + Nginx dalam satu container
-# Digunakan untuk Railway deployment
+# Digunakan untuk Koyeb / Railway deployment
 # ================================================
 FROM php:8.3-fpm-alpine
 
