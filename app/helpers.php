@@ -14,17 +14,17 @@ function e(mixed $value): string
 
 function route_url(string $route = ''): string
 {
-    $base = rtrim(config('app_url', 'http://localhost:8080'), '/');
     if ($route === '') {
-        return $base . '/index.php';
+        return '/index.php';
     }
 
-    return $base . '/index.php?route=' . $route;
+    return '/index.php?route=' . $route;
 }
 
 function asset_url(string $path): string
 {
-    return rtrim(config('app_url', 'http://localhost:8080'), '/') . '/' . ltrim($path, '/');
+    // Gunakan root-relative URL agar tidak bergantung pada APP_URL
+    return '/' . ltrim($path, '/');
 }
 
 function redirect(string $route): never
