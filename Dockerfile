@@ -1,7 +1,7 @@
 # ================================================
 # Craft Food Finder - Production Dockerfile
 # PHP 8.3-FPM + Nginx dalam satu container
-# Digunakan untuk Koyeb / Railway deployment
+# Digunakan untuk Railway deployment
 # ================================================
 FROM php:8.3-fpm-alpine
 
@@ -14,19 +14,25 @@ RUN apk add --no-cache \
     && docker-php-ext-install pdo pdo_mysql mysqli \
     && rm -rf /var/cache/apk/*
 
-# Copy konfigurasi Nginx
+# Hapus default nginx config bawaan Alpine yang bisa konflik
+RUN rm -f /etc/nginx/http.d/default.conf
+
+# Copy konfigurasi Nginx kita
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
-# Copy konfigurasi Supervisor (mengelola nginx + php-fpm bersamaan)
+# Copy konfigurasi Supervisor
 COPY docker/supervisord.conf /etc/supervisord.conf
 
 # Copy seluruh kode aplikasi
 WORKDIR /var/www/html
 COPY . .
 
-# Buat folder uploads jika belum ada
+# Buat direktori yang diperlukan
+# Alpine tidak punya www-data, pakai nobody atau nginx
 RUN mkdir -p public/assets/uploads \
-    && chown -R www-data:www-data public/assets/uploads \
+    && mkdir -p /run/nginx \
+    && mkdir -p /run/supervisord \
+    && chown -R nginx:nginx public/assets/uploads \
     && chmod -R 755 public/assets/uploads
 
 # Expose port 80
