@@ -1,0 +1,25 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# PHP
+/vendor/
+
+# Uploads (user-generated content)
+public/assets/uploads/*
+!public/assets/uploads/.gitkeep
+
+# Logs
+*.log
+/logs/
