@@ -14,8 +14,9 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache mod_rewrite (untuk URL routing)
-RUN a2enmod rewrite
+# Fix: Disable MPM yang konflik, gunakan mpm_prefork (wajib untuk mod_php)
+RUN a2dismod mpm_event mpm_worker 2>/dev/null || true \
+    && a2enmod mpm_prefork rewrite
 
 # Copy Apache VirtualHost config
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
