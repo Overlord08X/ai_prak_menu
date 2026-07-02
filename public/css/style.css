@@ -337,3 +337,119 @@ a {
         align-items: flex-start;
     }
 }
+
+/* ============================
+   MEDICAL CONDITION CARDS
+   ============================ */
+
+.condition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.condition-card {
+    position: relative;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    box-shadow: 0 2px 12px rgba(15,23,42,0.05);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.condition-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(220, 38, 38, 0.3);
+    box-shadow: 0 6px 24px rgba(220, 38, 38, 0.08);
+}
+
+.condition-card .condition-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.condition-card-inner {
+    flex: 1;
+    min-width: 0;
+}
+
+.condition-name {
+    font-size: .93rem;
+}
+
+.condition-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.condition-check-icon {
+    font-size: 1.25rem;
+    color: #dc2626;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.condition-card:has(.condition-checkbox:checked) {
+    border-color: #dc2626;
+    background: rgba(220, 38, 38, 0.04);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.condition-card:has(.condition-checkbox:checked) .condition-check-icon {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.condition-card:has(.condition-checkbox:checked) .condition-name {
+    color: #dc2626;
+}
+
+/* ============================
+   HEALTH ICON WRAP
+   ============================ */
+
+.health-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(13, 110, 253, 0.08);
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* ============================
+   INGREDIENT CARD CHECKED STATE
+   ============================ */
+
+.ingredient-card:has(input:checked) {
+    border-color: rgba(13, 110, 253, 0.5);
+    background: rgba(13, 110, 253, 0.04);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.12);
+}
+
+/* ============================
+   EXCLUDED RECIPE CARD
+   ============================ */
+
+.excluded-recipe-card {
+    transition: all 0.2s ease;
+}
+
+.excluded-recipe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(220, 38, 38, 0.1);
+}
+

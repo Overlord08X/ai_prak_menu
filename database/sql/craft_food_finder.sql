@@ -1,8 +1,11 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS consultation_conditions;
 DROP TABLE IF EXISTS consultation_results;
 DROP TABLE IF EXISTS consultation_details;
 DROP TABLE IF EXISTS consultations;
+DROP TABLE IF EXISTS condition_excluded_ingredients;
+DROP TABLE IF EXISTS medical_conditions;
 DROP TABLE IF EXISTS rule_details;
 DROP TABLE IF EXISTS rules;
 DROP TABLE IF EXISTS recipes;
@@ -63,6 +66,22 @@ CREATE TABLE consultation_details (
     CONSTRAINT fk_consultation_details_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE medical_conditions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nama_kondisi VARCHAR(100) NOT NULL,
+    deskripsi TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE condition_excluded_ingredients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    condition_id INT NOT NULL,
+    ingredient_id INT NOT NULL,
+    CONSTRAINT fk_cei_condition FOREIGN KEY (condition_id) REFERENCES medical_conditions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cei_ingredient FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_condition_ingredient (condition_id, ingredient_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE consultation_results (
     id INT AUTO_INCREMENT PRIMARY KEY,
     consultation_id INT NOT NULL,
@@ -71,8 +90,24 @@ CREATE TABLE consultation_results (
     CONSTRAINT fk_consultation_results_recipe FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE consultation_conditions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    consultation_id INT NOT NULL,
+    condition_id INT NOT NULL,
+    CONSTRAINT fk_cc_consultation FOREIGN KEY (consultation_id) REFERENCES consultations(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cc_condition FOREIGN KEY (condition_id) REFERENCES medical_conditions(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO users (nama, email, password, role) VALUES
 ('Administrator', 'admin@craftfood.com', SHA2('admin123', 256), 'admin');
+
+-- Kondisi penyakit: id akan berurutan 1-5
+INSERT INTO medical_conditions (nama_kondisi, deskripsi) VALUES
+('Diabetes', 'Kondisi kadar gula darah tinggi. Hindari bahan pemanis dan makanan tinggi karbohidrat olahan.'),
+('Hipertensi (Darah Tinggi)', 'Tekanan darah tinggi. Batasi asupan garam dan bahan yang meningkatkan tekanan darah.'),
+('Kolesterol Tinggi', 'Kadar lemak darah tinggi. Hindari lemak jenuh dari mentega, keju, dan daging berlemak.'),
+('Asam Urat', 'Kadar asam urat tinggi. Hindari daging merah, seafood, dan makanan tinggi purin.'),
+('Maag / Gastritis', 'Gangguan lambung. Hindari makanan pedas, asam, dan berlemak tinggi.');
 
 INSERT INTO ingredients (nama_bahan, deskripsi) VALUES
 ('Telur', 'Bahan protein serbaguna untuk banyak resep.'),
@@ -95,6 +130,22 @@ INSERT INTO ingredients (nama_bahan, deskripsi) VALUES
 ('Saus', 'Pelengkap rasa untuk mie dan sandwich.'),
 ('Bayam', 'Sayuran hijau bergizi.'),
 ('Ikan', 'Bahan protein laut untuk bakar atau goreng.');
+
+-- Pantangan bahan per kondisi penyakit
+-- ingredient IDs: Gula=5, Kecap=9, Saus=18, Garam=12, Mentega=11, Keju=16, Daging=15, Cabai=13, Ikan=20
+-- condition IDs: Diabetes=1, Hipertensi=2, Kolesterol=3, Asam Urat=4, Maag=5
+INSERT INTO condition_excluded_ingredients (condition_id, ingredient_id) VALUES
+-- Diabetes: pantang Gula, Kecap, Saus
+(1, 5), (1, 9), (1, 18),
+-- Hipertensi: pantang Garam, Kecap, Saus
+(2, 12), (2, 9), (2, 18),
+-- Kolesterol Tinggi: pantang Mentega, Keju, Daging
+(3, 11), (3, 16), (3, 15),
+-- Asam Urat: pantang Daging, Ikan, Cabai
+(4, 15), (4, 20), (4, 13),
+-- Maag: pantang Cabai, Kecap
+(5, 13), (5, 9);
+
 
 INSERT INTO recipes (nama_resep, deskripsi, langkah_memasak, gambar) VALUES
 ('Nasi Goreng Telur', 'Nasi goreng sederhana yang cocok untuk sarapan.', '1. Panaskan wajan dengan sedikit mentega.\n2. Tumis bawang putih hingga harum.\n3. Masukkan telur dan orak-arik.\n4. Tambahkan nasi dan kecap.\n5. Aduk rata lalu sajikan.', NULL),

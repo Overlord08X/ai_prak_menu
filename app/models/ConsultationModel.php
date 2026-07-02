@@ -34,6 +34,32 @@ class ConsultationModel extends BaseModel
         }
     }
 
+    public function addConditions(int $consultationId, array $conditionIds): void
+    {
+        if ($conditionIds === []) {
+            return;
+        }
+        $stmt = $this->pdo->prepare('INSERT INTO consultation_conditions (consultation_id, condition_id) VALUES (:consultation_id, :condition_id)');
+        foreach ($conditionIds as $conditionId) {
+            $stmt->execute([
+                'consultation_id' => $consultationId,
+                'condition_id' => (int) $conditionId,
+            ]);
+        }
+    }
+
+    public function getConditionsByConsultation(int $consultationId): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT mc.id, mc.nama_kondisi, mc.deskripsi FROM consultation_conditions cc
+             INNER JOIN medical_conditions mc ON mc.id = cc.condition_id
+             WHERE cc.consultation_id = :consultation_id
+             ORDER BY mc.nama_kondisi ASC'
+        );
+        $stmt->execute(['consultation_id' => $consultationId]);
+        return $stmt->fetchAll();
+    }
+
     public function historyByUser(int $userId): array
     {
         $stmt = $this->pdo->prepare('SELECT c.*, u.nama, COUNT(DISTINCT cd.id) AS ingredient_total, COUNT(DISTINCT cr.id) AS recipe_total FROM consultations c INNER JOIN users u ON u.id = c.user_id LEFT JOIN consultation_details cd ON cd.consultation_id = c.id LEFT JOIN consultation_results cr ON cr.consultation_id = c.id WHERE c.user_id = :user_id GROUP BY c.id ORDER BY c.tanggal DESC');

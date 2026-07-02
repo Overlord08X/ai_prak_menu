@@ -8,6 +8,7 @@ class ConsultationController extends BaseController
         private readonly IngredientModel $ingredientModel = new IngredientModel(),
         private readonly RecipeModel $recipeModel = new RecipeModel(),
         private readonly ForwardChainingService $forwardChainingService = new ForwardChainingService(),
+        private readonly MedicalConditionModel $medicalConditionModel = new MedicalConditionModel(),
     ) {
     }
 
@@ -15,8 +16,9 @@ class ConsultationController extends BaseController
     {
         $this->requireLogin();
         $this->render('consultations/form', [
-            'title' => 'Konsultasi',
-            'ingredients' => $this->ingredientModel->all('nama_bahan ASC'),
+            'title'      => 'Konsultasi',
+            'ingredients'=> $this->ingredientModel->all('nama_bahan ASC'),
+            'conditions' => $this->medicalConditionModel->allWithExcluded(),
         ], auth_role('admin') ? 'admin' : 'user');
     }
 
@@ -29,11 +31,18 @@ class ConsultationController extends BaseController
             redirect('consultation/form');
         }
 
+        $conditionIds = array_map('intval', $_POST['condition_ids'] ?? []);
+
         $user = auth_user();
         $consultationId = $this->consultationModel->createConsultation((int) $user['id']);
         $this->consultationModel->addIngredientDetails($consultationId, $ingredientIds);
 
-        $analysis = $this->forwardChainingService->analyze($ingredientIds);
+        // Simpan kondisi penyakit yang dipilih
+        if ($conditionIds !== []) {
+            $this->consultationModel->addConditions($consultationId, $conditionIds);
+        }
+
+        $analysis = $this->forwardChainingService->analyze($ingredientIds, $conditionIds);
         $resultRecipeIds = array_column($analysis['matches'], 'recipe_id');
         if ($resultRecipeIds !== []) {
             $this->consultationModel->addResults($consultationId, $resultRecipeIds);
@@ -41,8 +50,8 @@ class ConsultationController extends BaseController
 
         $consultation = $this->consultationModel->findDetail($consultationId);
         $this->render('consultations/result', [
-            'title' => 'Hasil Inferensi',
-            'analysis' => $analysis,
+            'title'        => 'Hasil Inferensi',
+            'analysis'     => $analysis,
             'consultation' => $consultation,
         ], auth_role('admin') ? 'admin' : 'user');
     }
@@ -52,7 +61,7 @@ class ConsultationController extends BaseController
         $this->requireLogin();
         $user = auth_user();
         $this->render('consultations/history', [
-            'title' => 'Riwayat Konsultasi',
+            'title'         => 'Riwayat Konsultasi',
             'consultations' => $this->consultationModel->historyByUser((int) $user['id']),
         ], auth_role('admin') ? 'admin' : 'user');
     }
@@ -73,11 +82,22 @@ class ConsultationController extends BaseController
             redirect('consultation/history');
         }
 
-        $analysis = $this->forwardChainingService->analyze(array_column($consultation['ingredients'], 'id'));
+        // Ambil kondisi penyakit dari konsultasi ini
+        $conditionIds = array_column(
+            $this->consultationModel->getConditionsByConsultation($id),
+            'id'
+        );
+
+        $analysis = $this->forwardChainingService->analyze(
+            array_column($consultation['ingredients'], 'id'),
+            $conditionIds
+        );
+
         $this->render('consultations/detail', [
-            'title' => 'Detail Konsultasi',
+            'title'        => 'Detail Konsultasi',
             'consultation' => $consultation,
-            'analysis' => $analysis,
+            'analysis'     => $analysis,
+            'conditions'   => $analysis['active_conditions'],
         ], auth_role('admin') ? 'admin' : 'user');
     }
 }
